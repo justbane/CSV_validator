@@ -18,6 +18,7 @@ A command-line interface tool for analyzing and validating CSV files. This tool 
 
 - Python 3.6 or higher
 - Git (for cloning the repository)
+- pip (Python package installer)
 
 ## Installation
 
@@ -27,10 +28,43 @@ A command-line interface tool for analyzing and validating CSV files. This tool 
    cd csv-validator
    ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment:
+
+   On macOS/Linux:
+   ```bash
+   # Create virtual environment
+   python3 -m venv venv
+   
+   # Activate virtual environment
+   source venv/bin/activate
+   ```
+
+   On Windows:
+   ```bash
+   # Create virtual environment
+   python -m venv venv
+   
+   # Activate virtual environment
+   .\venv\Scripts\activate
+   ```
+
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
+
+4. Verify installation:
+   ```bash
+   python csv_validator.py --help
+   ```
+
+### Deactivating the Virtual Environment
+
+When you're done using the tool, you can deactivate the virtual environment:
+
+```bash
+deactivate
+```
 
 ## Usage
 
