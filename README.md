@@ -5,11 +5,14 @@ A command-line interface tool for analyzing and validating CSV files. This tool 
 ## Features
 
 - Validates CSV file format
+- Checks file encoding (UTF-8 validation)
+- Validates column alignment and consistency
 - Counts duplicate records
 - Analyzes null values in each column
 - Reports column data types
 - Counts unique values per column
 - Provides basic file statistics
+- Generates detailed validation reports in text files
 
 ## Prerequisites
 
@@ -53,24 +56,45 @@ The tool will generate a report with the following sections:
 1. CSV Format Validation
    - Confirms if the file is properly formatted
    - Reports any formatting issues
+   - Validates UTF-8 encoding
+   - Checks column alignment and consistency
 
-2. Basic Statistics
+2. Column Alignment Details
+   - Number of columns in header
+   - Column count consistency across data rows
+   - Detailed information about any mismatched rows
+
+3. Basic Statistics
    - Total number of rows
    - Total number of columns
    - Number of duplicate rows
 
-3. Null Value Analysis
+4. Null Value Analysis
    - Count of null values in each column
 
-4. Column Statistics
+5. Column Statistics
    - Data type of each column
    - Number of unique values in each column
+
+### Report Files
+
+The tool automatically generates a detailed report file in the current directory with a name format:
+```
+<original_filename>_validation_report_YYYYMMDD_HHMMSS.txt
+```
+
+For example:
+```
+data_validation_report_20240321_143022.txt
+```
 
 ## Error Handling
 
 The tool will:
 - Verify that the provided file exists and has a .csv extension
 - Check for proper CSV formatting
+- Validate UTF-8 encoding
+- Check column alignment and consistency
 - Exit with a status code of 1 if any errors are encountered
 - Display appropriate error messages to stderr
 
