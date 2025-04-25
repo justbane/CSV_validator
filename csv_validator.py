@@ -9,6 +9,12 @@ import csv
 from typing import Dict, Any, Tuple
 import chardet
 from datetime import datetime
+import os
+from tqdm import tqdm
+
+def clear_screen():
+    """Clear the terminal screen."""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def validate_file_path(file_path: str) -> Path:
     """
@@ -30,6 +36,30 @@ def validate_file_path(file_path: str) -> Path:
     if path.suffix.lower() != '.csv':
         raise ValueError(f"The file {file_path} is not a CSV file")
     return path
+
+def check_file_encoding(file_path: Path) -> Tuple[bool, str]:
+    """
+    Check if the file contains any non-UTF-8 characters.
+    
+    Args:
+        file_path (Path): Path to the file to check
+        
+    Returns:
+        Tuple[bool, str]: (has_non_utf8, error_message)
+    """
+    try:
+        # Read the file in binary mode
+        with open(file_path, 'rb') as f:
+            content = f.read()
+            
+            # Try to decode as UTF-8
+            try:
+                content.decode('utf-8')
+                return True, "File contains only UTF-8 characters"
+            except UnicodeDecodeError as e:
+                return False, f"File contains non-UTF-8 characters at position {e.start}: {str(e)}"
+    except Exception as e:
+        return False, f"Error checking file characters: {str(e)}"
 
 def check_csv_format(file_path: Path) -> Tuple[bool, str, Dict[str, Any]]:
     """
@@ -57,15 +87,20 @@ def check_csv_format(file_path: Path) -> Tuple[bool, str, Dict[str, Any]]:
             
             details['header_columns'] = len(header)
             
+            # Get total number of rows for progress bar
+            total_rows = sum(1 for _ in open(file_path, 'r')) - 1  # Subtract header row
+            
             # Check if all rows have the same number of columns
-            for i, row in enumerate(reader, start=2):
-                details['data_columns'].append(len(row))
-                if len(row) != len(header):
-                    details['mismatched_rows'].append({
-                        'row_number': i,
-                        'expected_columns': len(header),
-                        'actual_columns': len(row)
-                    })
+            with tqdm(total=total_rows, desc="Checking column alignment", unit="rows") as pbar:
+                for i, row in enumerate(reader, start=2):
+                    details['data_columns'].append(len(row))
+                    if len(row) != len(header):
+                        details['mismatched_rows'].append({
+                            'row_number': i,
+                            'expected_columns': len(header),
+                            'actual_columns': len(row)
+                        })
+                    pbar.update(1)
             
             if details['mismatched_rows']:
                 error_msg = "Column count mismatch found in the following rows:\n"
@@ -103,7 +138,7 @@ def analyze_csv(file_path: Path) -> Dict[str, Any]:
     }
     
     # Get statistics for each column
-    for column in df.columns:
+    for column in tqdm(df.columns, desc="Analyzing columns", unit="columns"):
         results['column_stats'][column] = {
             'unique_values': df[column].nunique(),
             'dtype': str(df[column].dtype)
@@ -177,30 +212,6 @@ def format_report(results: Dict[str, Any], format_check: Tuple[bool, str, Dict[s
     
     return "\n".join(report)
 
-def check_file_encoding(file_path: Path) -> Tuple[bool, str]:
-    """
-    Check if the file contains any non-UTF-8 characters.
-    
-    Args:
-        file_path (Path): Path to the file to check
-        
-    Returns:
-        Tuple[bool, str]: (has_non_utf8, error_message)
-    """
-    try:
-        # Read the file in binary mode
-        with open(file_path, 'rb') as f:
-            content = f.read()
-            
-            # Try to decode as UTF-8
-            try:
-                content.decode('utf-8')
-                return True, "File contains only UTF-8 characters"
-            except UnicodeDecodeError as e:
-                return False, f"File contains non-UTF-8 characters at position {e.start}: {str(e)}"
-    except Exception as e:
-        return False, f"Error checking file characters: {str(e)}"
-
 def write_report_to_file(report: str, input_file: Path) -> Path:
     """
     Write the report to a file in the current directory.
@@ -240,25 +251,38 @@ def main():
     args = parser.parse_args()
     
     try:
+        clear_screen()
+        print("CSV Validator - Starting Analysis")
+        print("=" * 30)
+        
         # Validate file path
+        print("\nValidating file path...")
         file_path = validate_file_path(args.file_path)
+        print("✓ File path validated")
         
         # Check file encoding
+        print("\nChecking for non-UTF-8 characters...")
         encoding_check = check_file_encoding(file_path)
         if not encoding_check[0]:
             print(f"Error: {encoding_check[1]}", file=sys.stderr)
             sys.exit(1)
+        print("✓ File character check passed")
         
         # Check CSV format
+        print("\nChecking CSV format...")
         format_check = check_csv_format(file_path)
         
         # Analyze CSV if format is valid
         if format_check[0]:
+            print("\nAnalyzing CSV content...")
             results = analyze_csv(file_path)
             report = format_report(results, format_check)
+            
+            clear_screen()
             print(report)
             
             # Write report to file
+            print("\nGenerating report file...")
             report_path = write_report_to_file(report, file_path)
             if report_path:
                 print(f"\nReport has been written to: {report_path}")
