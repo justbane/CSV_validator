@@ -5,7 +5,7 @@ A command-line interface tool for analyzing and validating CSV files. This tool 
 ## Features
 
 - Validates CSV file format
-- Checks file encoding (UTF-8 validation)
+- Checks for non-UTF-8 characters
 - Validates column alignment and consistency
 - Counts duplicate records
 - Analyzes null values in each column
@@ -90,7 +90,7 @@ The tool will generate a report with the following sections:
 1. CSV Format Validation
    - Confirms if the file is properly formatted
    - Reports any formatting issues
-   - Validates UTF-8 encoding
+   - Checks for non-UTF-8 characters
    - Checks column alignment and consistency
 
 2. Column Alignment Details

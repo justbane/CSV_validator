@@ -179,26 +179,27 @@ def format_report(results: Dict[str, Any], format_check: Tuple[bool, str, Dict[s
 
 def check_file_encoding(file_path: Path) -> Tuple[bool, str]:
     """
-    Check if the file is UTF-8 encoded.
+    Check if the file contains any non-UTF-8 characters.
     
     Args:
         file_path (Path): Path to the file to check
         
     Returns:
-        Tuple[bool, str]: (is_utf8, encoding_info)
+        Tuple[bool, str]: (has_non_utf8, error_message)
     """
     try:
-        # Read a chunk of the file to detect encoding
+        # Read the file in binary mode
         with open(file_path, 'rb') as f:
-            raw_data = f.read(10000)  # Read first 10KB for encoding detection
-            result = chardet.detect(raw_data)
+            content = f.read()
             
-            if result['encoding'].lower() == 'utf-8':
-                return True, "File is UTF-8 encoded"
-            else:
-                return False, f"File is {result['encoding']} encoded, not UTF-8"
+            # Try to decode as UTF-8
+            try:
+                content.decode('utf-8')
+                return True, "File contains only UTF-8 characters"
+            except UnicodeDecodeError as e:
+                return False, f"File contains non-UTF-8 characters at position {e.start}: {str(e)}"
     except Exception as e:
-        return False, f"Error checking file encoding: {str(e)}"
+        return False, f"Error checking file characters: {str(e)}"
 
 def write_report_to_file(report: str, input_file: Path) -> Path:
     """
